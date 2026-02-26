@@ -37,14 +37,35 @@ public class SecurityConfig {
 	        )
 	        .sessionManagement(session ->
 	                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+	        )
+	        .exceptionHandling(ex -> ex
+	            .authenticationEntryPoint((request, response, authException) -> {
+	                response.setStatus(401);
+	                response.setContentType("application/json");
+	                response.getWriter().write("""
+	                    {
+	                        "error": "Unauthorized",
+	                        "message": "Authentication required or token is invalid."
+	                    }
+	                    """);
+	            })
+	            .accessDeniedHandler((request, response, accessDeniedException) -> {
+	                response.setStatus(403);
+	                response.setContentType("application/json");
+	                response.getWriter().write("""
+	                    {
+	                        "error": "Access Denied",
+	                        "message": "You are not authorized to perform this action."
+	                    }
+	                    """);
+	            })
 	        );
 
-//	    http.addFilterBefore(jwtFilter,
-//	            UsernamePasswordAuthenticationFilter.class);
+	    http.addFilterBefore(jwtFilter,
+	            UsernamePasswordAuthenticationFilter.class);
 
 	    return http.build();
 	}
-
 
     @Bean
     public PasswordEncoder passwordEncoder() {

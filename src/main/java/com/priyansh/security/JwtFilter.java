@@ -32,7 +32,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String path = request.getServletPath();
 
-        // 🔥 Skip Swagger endpoints
+        // Skip Swagger endpoints
         if (path.startsWith("/v3/api-docs") ||
             path.startsWith("/swagger-ui")) {
             filterChain.doFilter(request, response);

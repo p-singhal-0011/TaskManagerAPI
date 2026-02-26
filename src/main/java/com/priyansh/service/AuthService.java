@@ -1,8 +1,11 @@
 package com.priyansh.service;
 
 import com.priyansh.entity.User;
+import com.priyansh.entity.Role;
 import com.priyansh.repository.UserRepository;
 import com.priyansh.security.JwtUtil;
+import com.priyansh.exception.ApiException;
+import com.priyansh.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,10 +20,15 @@ public class AuthService {
 
     public void register(User user) {
 
+        // Check if email already exists
+        if (userRepository.existsByEmail(user.getEmail())) {
+            throw new ApiException(ErrorCode.EMAIL_ALREADY_EXISTS);
+        }
+
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
         if (user.getRole() == null) {
-            user.setRole(com.priyansh.entity.Role.USER);
+            user.setRole(Role.USER);
         }
 
         userRepository.save(user);
@@ -29,10 +37,10 @@ public class AuthService {
     public String login(com.priyansh.dto.AuthRequest request) {
 
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ApiException(ErrorCode.INVALID_CREDENTIALS));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new ApiException(ErrorCode.INVALID_CREDENTIALS);
         }
 
         return jwtUtil.generateToken(user.getEmail());
